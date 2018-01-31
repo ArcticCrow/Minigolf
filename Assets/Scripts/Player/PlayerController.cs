@@ -2,34 +2,58 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(LineRenderer))]
 public class PlayerController : MonoBehaviour {
 
-	public GameObject GolfBall;
+	public GameObject ball;
+	public Vector3 forceMultiplier = new Vector3(1, 0, 1);
+	//public float cameraDistance = 10f;
 
-	public float appliedForce = 20f;
-	public float maxForce = 100f;
+	LineRenderer forceLineRenderer;
+	GolfBall golfBall;
+	Vector3 mouseWorldPosition;
 
-	private Rigidbody rb;
+	private void Awake ()
+	{
+		if (ball == null)
+			Debug.LogError("No ball is assigned to the player controller!");
+	}
 
 	// Use this for initialization
-	void Start () {
-		if (GolfBall == null)
-			return;
+	void Start ()
+	{
+		golfBall = ball.GetComponent<GolfBall>();
 
-		rb = GetComponent<Rigidbody>();
+		forceLineRenderer = GetComponent<LineRenderer>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		Vector3 dir = new Vector3();
-		dir.z = Input.GetAxis("Vertical");
-		dir.x = Input.GetAxis("Horizontal");
-
-		rb.AddForce(dir * appliedForce);
+		if (!golfBall.isMoving())
+		{
+			if (Input.GetMouseButton(0))
+			{
+				DrawForceLine();
+			}
+			if (Input.GetMouseButtonUp(0))
+			{
+				golfBall.AddImpulse(Vector3.Scale((ball.transform.position - mouseWorldPosition), forceMultiplier));
+				forceLineRenderer.positionCount = 0;
+			}
+		}
 	}
 
-	private void LateUpdate ()
+	void DrawForceLine()
 	{
-		//transform.position = GolfBall.transform.position;
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+		if (Physics.Raycast(ray, out hit))
+		{
+			mouseWorldPosition = hit.point;
+			forceLineRenderer.positionCount = 2;
+			forceLineRenderer.SetPosition(0, ball.transform.position);
+			forceLineRenderer.SetPosition(1, ball.transform.position*2 - mouseWorldPosition);
+			//Debug.Log(hit.point);
+		}
 	}
 }
