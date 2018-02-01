@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider))]
-[RequireComponent(typeof(Rigidbody))]
-public class Wall : MonoBehaviour {
+public class CourseGenerator : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

@@ -6,7 +6,7 @@ public class Hole : MonoBehaviour {
 
 	private void OnTriggerEnter (Collider other)
 	{
-		if (other.transform.CompareTag("Ball"))
+		if (other.transform.CompareTag("Player"))
 		{
 			Debug.Log("Player reached hole");
 		} else

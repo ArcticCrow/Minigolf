@@ -1,59 +1,97 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Networking;
 
-[RequireComponent(typeof(LineRenderer))]
-public class PlayerController : MonoBehaviour {
+[RequireComponent(typeof(SphereCollider))]
+[RequireComponent(typeof(Rigidbody))]
+//[RequireComponent(typeof(LineRenderer))]
+public class PlayerController : NetworkBehaviour {
 
-	public GameObject ball;
 	public Vector3 forceMultiplier = new Vector3(1, 0, 1);
-	//public float cameraDistance = 10f;
 
-	LineRenderer forceLineRenderer;
-	GolfBall golfBall;
-	Vector3 mouseWorldPosition;
+	public float maxForce = 10f;
+	public float maxVelocity = 100f;
 
-	private void Awake ()
+	public Canvas PlayerUI;
+	public Image ForceMeterDisplay;
+	public float maxLineDistance = 10f;
+
+	private Rigidbody rb;
+
+	float startMouseY, releaseMouseY;
+
+	float appliedForce;
+
+	public override void OnStartLocalPlayer ()
 	{
-		if (ball == null)
-			Debug.LogError("No ball is assigned to the player controller!");
+		GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
+
+		rb = GetComponent<Rigidbody>();
+		rb.maxAngularVelocity = maxVelocity;
+
+		// enable player ui
+		PlayerUI.enabled = true;
 	}
 
-	// Use this for initialization
-	void Start ()
-	{
-		golfBall = ball.GetComponent<GolfBall>();
-
-		forceLineRenderer = GetComponent<LineRenderer>();
-	}
-	
 	// Update is called once per frame
 	void Update () {
-		if (!golfBall.isMoving())
+		if (!isLocalPlayer)
+		{
+			return;
+		}
+
+		if (!IsMoving())
 		{
 			if (Input.GetMouseButton(0))
 			{
-				DrawForceLine();
+				releaseMouseY = Input.mousePosition.y;
+				CalculateAppliedForce();
+				DrawUILine();
+			}
+			if (Input.GetMouseButtonDown(0))
+			{
+				startMouseY = Input.mousePosition.y;
 			}
 			if (Input.GetMouseButtonUp(0))
 			{
-				golfBall.AddImpulse(Vector3.Scale((ball.transform.position - mouseWorldPosition), forceMultiplier));
-				forceLineRenderer.positionCount = 0;
+				ApplyHit();
 			}
 		}
 	}
 
-	void DrawForceLine()
+	void CalculateAppliedForce ()
 	{
-		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		RaycastHit hit;
-		if (Physics.Raycast(ray, out hit))
+		float maxForceDistance = (float) Screen.height * .5f;
+		float distance = startMouseY - releaseMouseY;
+
+		appliedForce = Mathf.Clamp(distance / maxForceDistance, 0f, 1f) * maxForce;
+	}
+
+	void ApplyHit()
+	{
+		if (appliedForce > 0)
 		{
-			mouseWorldPosition = hit.point;
-			forceLineRenderer.positionCount = 2;
-			forceLineRenderer.SetPosition(0, ball.transform.position);
-			forceLineRenderer.SetPosition(1, ball.transform.position*2 - mouseWorldPosition);
-			//Debug.Log(hit.point);
+			AddImpulse(Vector3.Scale(forceMultiplier, Camera.main.transform.forward) * appliedForce * rb.mass);
+		} else
+		{
+
 		}
+	}
+
+	public void AddImpulse (Vector3 force)
+	{
+		rb.AddForce(force, ForceMode.Impulse);
+	}
+
+	public bool IsMoving ()
+	{
+		return (rb.velocity.magnitude > 0);
+	}
+
+	void DrawUILine()
+	{
+		ForceMeterDisplay.fillAmount = appliedForce / maxForce;
 	}
 }
