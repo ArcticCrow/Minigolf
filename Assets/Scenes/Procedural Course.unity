@@ -387,7 +387,8 @@ MonoBehaviour:
   difficultyIncreasePower: 1.1
   useRandomSeed: 1
   seed: 
-  lineList: []
+  groundMaterial: {fileID: 2100000, guid: a170dc57a289e5e4faee496438a08082, type: 2}
+  holeList: []
   totalAreaBounds: []
   currentPointAmount: 0
 --- !u!4 &1622748459
@@ -420,7 +421,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &2001949335
 MeshRenderer:
   m_ObjectHideFlags: 0
