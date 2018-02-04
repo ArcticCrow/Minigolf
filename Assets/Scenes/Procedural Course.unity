@@ -152,6 +152,10 @@ Prefab:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1698500719773088, guid: cdb611f37961bae4e8d372f3ca998578, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: cdb611f37961bae4e8d372f3ca998578, type: 2}
   m_IsPrefabParent: 0
@@ -381,13 +385,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numberOfHoles: 5
-  maxAreaPerHole: {x: 50, y: 1, z: 200}
+  maxAreaPerHole: {x: 1000, y: 0, z: 2000}
   basePointAmount: 3
   horizontalOffset: 5
   difficultyIncreasePower: 1.1
-  useRandomSeed: 1
-  seed: 
-  groundMaterial: {fileID: 2100000, guid: a170dc57a289e5e4faee496438a08082, type: 2}
+  useRandomSeed: 0
+  seed: 636533876367543853
+  groundMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   holeList: []
   totalAreaBounds: []
   currentPointAmount: 0

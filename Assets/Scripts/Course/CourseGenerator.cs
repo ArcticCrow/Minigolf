@@ -75,6 +75,8 @@ public class CourseGenerator : MonoBehaviour {
 
 	private void GenerateHoleMeshes ()
 	{
+		float trackPadding = 20f;
+
 		for (int i = 0; i < holeList.Count; i++)
 		{
 			GameObject hole = holeList [i];
@@ -82,14 +84,69 @@ public class CourseGenerator : MonoBehaviour {
 			Mesh newMesh = new Mesh();
 
 			LineRenderer lr = hole.GetComponent<LineRenderer>();
+			lr.widthMultiplier = trackPadding;
 
-			for (int j = 0; j < lr.positionCount - 1; j++)
+			// Debugging
+			GameObject dbo1 = new GameObject("Left Border");
+			LineRenderer dbl1 = dbo1.AddComponent<LineRenderer>();
+			dbo1.transform.SetParent(hole.transform);
+
+			dbl1.positionCount = lr.positionCount * 2;
+			dbl1.startColor = Color.green;
+			dbl1.endColor = Color.red;
+			dbl1.material = groundMaterial;
+			dbl1.widthMultiplier = trackPadding/2f;
+
+
+			GameObject dbo2 = new GameObject("Right Border");
+			LineRenderer dbl2 = dbo2.AddComponent<LineRenderer>();
+			dbo2.transform.SetParent(hole.transform);
+
+			dbl2.positionCount = lr.positionCount * 2;
+			dbl2.startColor = Color.blue;
+			dbl2.endColor = Color.yellow;
+			dbl2.material = groundMaterial;
+			dbl2.widthMultiplier = trackPadding/2f;
+
+
+			for (int j = 0; j < lr.positionCount; j++)
 			{
-				Vector3 closeLeft = lr.GetPosition(i) - new Vector3(3, 0, 3);
-				Vector3 farRight = lr.GetPosition(i+1) + new Vector3(3, 0, 3);
+				Quaternion dir;
+				if (j == lr.positionCount - 1)
+				{
+					
+					dir = Quaternion.LookRotation(lr.GetPosition(j-1) - lr.GetPosition(j));
+				}
+				else if (j == 0)
+				{
+					dir = Quaternion.LookRotation(lr.GetPosition(j) - lr.GetPosition(j + 1));
+				} else
+				{
+					Quaternion dirIn = Quaternion.LookRotation(lr.GetPosition(j) - lr.GetPosition(j + 1));
+					Quaternion dirOut = Quaternion.LookRotation(lr.GetPosition(j - 1) - lr.GetPosition(j));
+					dir = Quaternion.Slerp(dirIn, dirOut, 0.5f);
+				}
+
+
+				Debug.Log(j + ":" + dir.eulerAngles);
+
+				Vector3 bottomLeft, bottomRight, topLeft, topRight;
+				bottomLeft = dir * new Vector3(-trackPadding, 0, -trackPadding) + lr.GetPosition(j);
+				bottomRight = dir * new Vector3(trackPadding, 0, -trackPadding) + lr.GetPosition(j);
+				topLeft = dir * new Vector3(-trackPadding, 0, trackPadding) + lr.GetPosition(j);
+				topRight = dir * new Vector3(trackPadding, 0, trackPadding) + lr.GetPosition(j);
+
+
+				dbl1.SetPosition(j*2 + 1, bottomLeft);
+				dbl2.SetPosition(j*2 + 1, bottomRight);
+				dbl1.SetPosition(j*2, topLeft);
+				dbl2.SetPosition(j*2, topRight);
+				
+				//Debug.Log(j + ":(bl)" + bottomLeft + ";(br)" + bottomRight + ";(tl)" + topLeft + ";(tr)" + topRight);
+
 
 				// FIXME wrong offset values; see notes on how to fix
-				Vector3 [ ] vertices = new Vector3 [4];
+				/*Vector3 [ ] vertices = new Vector3 [4];
 				vertices [0] = closeLeft;
 				vertices [1] = closeLeft + new Vector3 (6, 0, 0);
 				vertices [2] = farRight - new Vector3(-6, 0, 0);
@@ -126,7 +183,7 @@ public class CourseGenerator : MonoBehaviour {
 				uv [2] = new Vector2(0, 1);
 				uv [3] = new Vector2(1, 1);
 
-				newMesh.uv = uv;
+				newMesh.uv = uv;*/
 			}
 
 			mf.mesh = newMesh;
@@ -138,7 +195,16 @@ public class CourseGenerator : MonoBehaviour {
 	{
 		if (Input.GetMouseButtonDown(1))
 		{
+			ClearExistingCourse();
 			Start();
+		}
+	}
+
+	private void ClearExistingCourse ()
+	{
+		for (int i = 0; i < transform.childCount; i++)
+		{
+			Destroy(transform.GetChild(i).gameObject);
 		}
 	}
 
@@ -163,9 +229,8 @@ public class CourseGenerator : MonoBehaviour {
 		for (int i = 0; i < numberOfHoles; i++)
 		{
 			GameObject newHole = new GameObject("Hole " + (i+1));
-			newHole = Instantiate(newHole, transform);
-
-			newHole.transform.position = GetAreaStart(i) + Vector3.Scale(maxAreaPerHole, new Vector3(0.5f, 1, 0.5f));
+			newHole.transform.SetParent(transform);
+			//newHole.transform.position = GetAreaStart(i) + Vector3.Scale(maxAreaPerHole, new Vector3(0.5f, 1, 0.5f));
 
 			// Set and increment the number of points in line for hole i
 			int points = currentPointAmount;
@@ -174,6 +239,7 @@ public class CourseGenerator : MonoBehaviour {
 
 			LineRenderer newLine = newHole.AddComponent<LineRenderer>();
 			newLine.positionCount = points;
+			newLine.material = groundMaterial;
 
 			for (int j = 0; j < points; j++)
 			{
