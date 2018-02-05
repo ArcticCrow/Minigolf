@@ -18,7 +18,10 @@ public class CourseGenerator : MonoBehaviour {
 	public bool useRandomSeed = true;	// Should the randomizer use a random or a given seed?
 	public string seed = "";    // The seed to initialize the randomizer with
 
+	public bool areLinesVisible = true;
+
 	public Material groundMaterial;
+	public Material lineMaterial;
 
 
 	[SerializeField]
@@ -75,7 +78,7 @@ public class CourseGenerator : MonoBehaviour {
 
 	private void GenerateHoleMeshes ()
 	{
-		float trackPadding = 20f;
+		float trackPadding = 100f;
 
 		for (int i = 0; i < holeList.Count; i++)
 		{
@@ -85,6 +88,8 @@ public class CourseGenerator : MonoBehaviour {
 
 			LineRenderer lr = hole.GetComponent<LineRenderer>();
 			lr.widthMultiplier = trackPadding;
+			lr.startColor = Color.blue;
+			lr.endColor = Color.magenta;
 
 			// Debugging
 			GameObject dbo1 = new GameObject("Left Border");
@@ -94,7 +99,7 @@ public class CourseGenerator : MonoBehaviour {
 			dbl1.positionCount = lr.positionCount * 2;
 			dbl1.startColor = Color.green;
 			dbl1.endColor = Color.red;
-			dbl1.material = groundMaterial;
+			dbl1.material = lineMaterial;
 			dbl1.widthMultiplier = trackPadding/2f;
 
 
@@ -103,12 +108,12 @@ public class CourseGenerator : MonoBehaviour {
 			dbo2.transform.SetParent(hole.transform);
 
 			dbl2.positionCount = lr.positionCount * 2;
-			dbl2.startColor = Color.blue;
+			dbl2.startColor = Color.cyan;
 			dbl2.endColor = Color.yellow;
-			dbl2.material = groundMaterial;
+			dbl2.material = lineMaterial;
 			dbl2.widthMultiplier = trackPadding/2f;
 
-
+			// Setup line renderers
 			for (int j = 0; j < lr.positionCount; j++)
 			{
 				Quaternion dir;
@@ -128,7 +133,7 @@ public class CourseGenerator : MonoBehaviour {
 				}
 
 
-				Debug.Log(j + ":" + dir.eulerAngles);
+				//Debug.Log(j + ":" + dir.eulerAngles);
 
 				Vector3 bottomLeft, bottomRight, topLeft, topRight;
 				bottomLeft = dir * new Vector3(-trackPadding, 0, -trackPadding) + lr.GetPosition(j);
@@ -136,57 +141,75 @@ public class CourseGenerator : MonoBehaviour {
 				topLeft = dir * new Vector3(-trackPadding, 0, trackPadding) + lr.GetPosition(j);
 				topRight = dir * new Vector3(trackPadding, 0, trackPadding) + lr.GetPosition(j);
 
-
-				dbl1.SetPosition(j*2 + 1, bottomLeft);
-				dbl2.SetPosition(j*2 + 1, bottomRight);
 				dbl1.SetPosition(j*2, topLeft);
 				dbl2.SetPosition(j*2, topRight);
-				
+				dbl1.SetPosition(j * 2 + 1, bottomLeft);
+				dbl2.SetPosition(j * 2 + 1, bottomRight);
+
 				//Debug.Log(j + ":(bl)" + bottomLeft + ";(br)" + bottomRight + ";(tl)" + topLeft + ";(tr)" + topRight);
-
-
-				// FIXME wrong offset values; see notes on how to fix
-				/*Vector3 [ ] vertices = new Vector3 [4];
-				vertices [0] = closeLeft;
-				vertices [1] = closeLeft + new Vector3 (6, 0, 0);
-				vertices [2] = farRight - new Vector3(-6, 0, 0);
-				vertices [3] = farRight;
-
-				newMesh.vertices = vertices;
-
-
-				int [ ] tri = new int [6];
-				tri [0] = 0;
-				tri [1] = 2;
-				tri [2] = 1;
-
-				tri [0] = 2;
-				tri [1] = 3;
-				tri [2] = 1;
-
-				newMesh.triangles = tri;
-
-				// FIXME follow up error on wrong offset values; fix afterwards by calculating the negative forward from the plane of vertices
-				Vector3 [ ] normals = new Vector3 [4];
-				normals [0] = -Vector3.forward;
-				normals [1] = -Vector3.forward;
-				normals [2] = -Vector3.forward;
-				normals [3] = -Vector3.forward;
-
-				newMesh.normals = normals;
-
-
-				Vector2 [ ] uv = new Vector2 [4];
-
-				uv [0] = new Vector2(0, 0);
-				uv [1] = new Vector2(1, 0);
-				uv [2] = new Vector2(0, 1);
-				uv [3] = new Vector2(1, 1);
-
-				newMesh.uv = uv;*/
 			}
 
+			// Create hole mesh
+			int totalVertexCount = dbl1.positionCount + dbl2.positionCount;
+			int vertexIndex = 0;
+			Vector3 [ ] vertices = new Vector3 [totalVertexCount];
+			Vector3 [ ] normals = new Vector3 [totalVertexCount];
+			Vector2 [ ] uv = new Vector2 [totalVertexCount];
+
+			int triIndex = 0;
+			int [ ] tri = new int [Mathf.RoundToInt((float)totalVertexCount*3f - 6f)];
+
+			for (int j = 0; j < dbl1.positionCount - 1; j++)
+			{
+				Vector3 topLeft = dbl1.GetPosition(j);
+				Vector3 topRight = dbl2.GetPosition(j);
+				Vector3 bottomLeft = dbl1.GetPosition(j+1);
+				Vector3 bottomRight = dbl2.GetPosition(j+1);
+				Vector3 up = -Vector3.up;
+
+				vertexIndex = j * 2;
+				triIndex = j * 6;
+
+				Debug.Log(j + ":" + triIndex + " of " + Mathf.RoundToInt((float) totalVertexCount * 3f - 7f));
+
+				// Vertices for track part j
+				vertices [vertexIndex + 0] = bottomLeft;
+				vertices [vertexIndex + 1] = bottomRight;
+				vertices [vertexIndex + 2] = topLeft;
+				vertices [vertexIndex + 3] = topRight;
+
+				// Normals for vertices of track part j
+				// FIXME wrong normals
+				normals [vertexIndex + 0] = -up;
+				normals [vertexIndex + 1] = -up;
+				normals [vertexIndex + 2] = -up;
+				normals [vertexIndex + 3] = -up;
+
+				// UV Mapping for vertices of track part j
+				uv [vertexIndex + 0] = new Vector2(0, 0);
+				uv [vertexIndex + 1] = new Vector2(1, 0);
+				uv [vertexIndex + 2] = new Vector2(0, 1);
+				uv [vertexIndex + 3] = new Vector2(1, 1);
+
+				// Triangles for track part j (clockwise)
+				tri [triIndex + 0] = vertexIndex + 0;
+				tri [triIndex + 1] = vertexIndex + 2;
+				tri [triIndex + 2] = vertexIndex + 1;
+				tri [triIndex + 3] = vertexIndex + 2;
+				tri [triIndex + 4] = vertexIndex + 3;
+				tri [triIndex + 5] = vertexIndex + 1;
+			}
+
+			newMesh.vertices = vertices;
+			newMesh.triangles = tri;
+			newMesh.normals = normals;
+			newMesh.uv = uv;
+
 			mf.mesh = newMesh;
+
+			lr.enabled = areLinesVisible;
+			dbl1.enabled = areLinesVisible;
+			dbl2.enabled = areLinesVisible;
 		}
 	}
 
@@ -239,7 +262,7 @@ public class CourseGenerator : MonoBehaviour {
 
 			LineRenderer newLine = newHole.AddComponent<LineRenderer>();
 			newLine.positionCount = points;
-			newLine.material = groundMaterial;
+			newLine.material = lineMaterial;
 
 			for (int j = 0; j < points; j++)
 			{

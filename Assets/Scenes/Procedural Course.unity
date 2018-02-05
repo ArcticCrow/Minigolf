@@ -387,11 +387,13 @@ MonoBehaviour:
   numberOfHoles: 5
   maxAreaPerHole: {x: 1000, y: 0, z: 2000}
   basePointAmount: 3
-  horizontalOffset: 5
+  horizontalOffset: 200
   difficultyIncreasePower: 1.1
-  useRandomSeed: 0
+  useRandomSeed: 1
   seed: 636533876367543853
-  groundMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+  areLinesVisible: 0
+  groundMaterial: {fileID: 2100000, guid: a170dc57a289e5e4faee496438a08082, type: 2}
+  lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   holeList: []
   totalAreaBounds: []
   currentPointAmount: 0
