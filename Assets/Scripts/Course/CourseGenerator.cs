@@ -5,12 +5,55 @@ using UnityEngine;
 
 using Random = UnityEngine.Random;
 
+[Serializable]
+public struct Direction
+{
+	[SerializeField]
+	Vector3 positive;
+
+	public Direction(Vector2 horizontal, float vertical)
+	{
+		horizontal = horizontal.normalized;
+		positive = new Vector3(horizontal.x, vertical, horizontal.y);
+	}
+
+	public Vector3 GetVector(float scale)
+	{
+		return positive * scale;
+	}
+
+	public Vector3 GetHorizontalVector()
+	{
+		return new Vector3(positive.x, 0, positive.z);
+	}
+
+	public bool HasSameHorizontalDirection (Direction otherDir)
+	{
+		return HasSameHorizontalDirection(otherDir.GetHorizontalVector());
+	}
+
+	public bool HasSameHorizontalDirection (Vector3 otherDirVec)
+	{
+		otherDirVec = new Vector3(otherDirVec.x, 0, otherDirVec.z).normalized;
+		Debug.Log(otherDirVec + "->" + GetHorizontalVector() + "?" + (GetHorizontalVector() == otherDirVec || -GetHorizontalVector() == otherDirVec));
+		return (GetHorizontalVector() == otherDirVec || -GetHorizontalVector() == otherDirVec);
+	}
+}
+
 public class CourseGenerator : MonoBehaviour {
 
 	public int numberOfHoles = 2;	// How many holes are supposed to be generated
 	public Vector3 maxAreaPerHole = new Vector3(10, 5, 10);	// How much area does one hole take
 	public int basePointAmount = 3; // How many line segments is the generator supposed to start of with
-	public float horizontalOffset = 5f;	// Horizontal offset between each area
+	public float horizontalOffset = 5f; // Horizontal offset between each area
+
+	public int segmentScale = 50;
+
+	public int minSegmentLength = 1;
+	public int maxSegmentLength = 3;
+
+	public int minSegmentWidth = 3;
+	public int maxSegmentWidth = 5;
 
 	[Range(1f, 1.5f)]
 	public float difficultyIncreasePower = 1.1f;	// The power that determines the increase of line segements per hole
@@ -23,14 +66,36 @@ public class CourseGenerator : MonoBehaviour {
 	public Material groundMaterial;
 	public Material lineMaterial;
 
+	public List<Vector2> possibleHorizontalDirections = new List<Vector2>()
+	{
+		// Initialize list with 8 cardinal directions
+		new Vector2(0, 1), // north
+		new Vector2(1, 1), // north-west
+		new Vector2(1, 0), // west
+		new Vector2(1, -1), // south-west
+		new Vector2(0, -1), // south
+		new Vector2(-1, -1), // south-east
+		new Vector2(-1, 0), // east
+		new Vector2(-1, 1), // north-east
+	};
 
-	[SerializeField]
+	public List<float> possibleVerticalDirections = new List<float>();/*
+	{
+		-1f,
+		-.75f,
+		-.5f,
+		-.25f,
+		-.125f,
+		0,
+		.125f,
+		.25f,
+		.33f
+	};*/
+
+
+	List<Direction> directionPool;
 	List<GameObject> holeList;
-
-	[SerializeField]
 	Vector3[] totalAreaBounds;
-
-	[SerializeField]
 	int currentPointAmount;
 
 	// Use this for initialization
@@ -46,6 +111,9 @@ public class CourseGenerator : MonoBehaviour {
 		// Calculate CLOSE BOTTOM LEFT and FAR TOP RIGHT corner of total area
 		CalculateTotalArea();
 
+		// Initialize the direction pool with the given vectors
+		InitializeDirectionPool();
+
 		// Create line renderers
 		GenerateLineRenderers();
 
@@ -55,6 +123,25 @@ public class CourseGenerator : MonoBehaviour {
 		// Customize mesh appearence/collision
 		AddMeshRenderers();
 		AddMeshColliders();
+	}
+
+	private void InitializeDirectionPool ()
+	{
+		directionPool = new List<Direction>(possibleHorizontalDirections.Count * possibleVerticalDirections.Count);
+		for (int i = 0; i < possibleHorizontalDirections.Count; i++)
+		{
+			if (possibleVerticalDirections.Count == 0)
+			{
+				directionPool.Add(new Direction(possibleHorizontalDirections [i], 0));
+			}
+			else
+			{
+				for (int j = 0; j < possibleVerticalDirections.Count; j++)
+				{
+					directionPool.Add(new Direction(possibleHorizontalDirections [i], possibleVerticalDirections[j]));
+				}
+			}
+		}
 	}
 
 	private void AddMeshColliders ()
@@ -170,8 +257,6 @@ public class CourseGenerator : MonoBehaviour {
 				vertexIndex = j * 2;
 				triIndex = j * 6;
 
-				Debug.Log(j + ":" + triIndex + " of " + Mathf.RoundToInt((float) totalVertexCount * 3f - 7f));
-
 				// Vertices for track part j
 				vertices [vertexIndex + 0] = bottomLeft;
 				vertices [vertexIndex + 1] = bottomRight;
@@ -263,10 +348,36 @@ public class CourseGenerator : MonoBehaviour {
 			LineRenderer newLine = newHole.AddComponent<LineRenderer>();
 			newLine.positionCount = points;
 			newLine.material = lineMaterial;
+			newLine.sortingOrder = 1;
+
+			Vector3 point = new Vector3();
 
 			for (int j = 0; j < points; j++)
 			{
-				Vector3 point = GetRandomVectorInArea(i);
+				// Get random start location in hole area
+				if (j == 0)
+				{
+					point = GetRandomVectorInArea(i);
+				}
+				// Get random direction in pool and add to last point
+				else
+				{
+					int scale = Random.Range(minSegmentLength, maxSegmentLength + 1) * segmentScale;
+					Direction dir = directionPool [Random.Range(0, directionPool.Count)];
+
+					if (j > 1)
+					{
+						//FIXME
+						Vector3 lastDirVector = point - newLine.GetPosition(j - 2);
+						while (dir.HasSameHorizontalDirection(lastDirVector))
+						{
+							dir = directionPool [Random.Range(0, directionPool.Count)];
+							lastDirVector = point - newLine.GetPosition(j - 2);
+						}
+					}
+
+					point += dir.GetVector(scale);
+				}
 				newLine.SetPosition(j, point);
 			}
 

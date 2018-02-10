@@ -384,19 +384,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4526d05234466a34192a97aa930da142, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfHoles: 5
+  numberOfHoles: 1
   maxAreaPerHole: {x: 1000, y: 0, z: 2000}
-  basePointAmount: 3
+  basePointAmount: 10
   horizontalOffset: 200
+  segmentScale: 200
+  minSegmentLength: 1
+  maxSegmentLength: 3
+  minSegmentWidth: 3
+  maxSegmentWidth: 5
   difficultyIncreasePower: 1.1
   useRandomSeed: 1
   seed: 636533876367543853
-  areLinesVisible: 0
+  areLinesVisible: 1
   groundMaterial: {fileID: 2100000, guid: a170dc57a289e5e4faee496438a08082, type: 2}
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
-  holeList: []
-  totalAreaBounds: []
-  currentPointAmount: 0
+  possibleHorizontalDirections:
+  - {x: 0, y: 1}
+  - {x: 1, y: 1}
+  - {x: 1, y: 0}
+  - {x: 1, y: -1}
+  - {x: 0, y: -1}
+  - {x: -1, y: -1}
+  - {x: -1, y: 0}
+  - {x: -1, y: 1}
+  possibleVerticalDirections: []
 --- !u!4 &1622748459
 Transform:
   m_ObjectHideFlags: 0
