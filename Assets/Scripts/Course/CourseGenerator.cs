@@ -42,10 +42,10 @@ public struct Direction
 
 public class CourseGenerator : MonoBehaviour {
 
-	public int numberOfHoles = 2;	// How many holes are supposed to be generated
-	public Vector3 maxAreaPerHole = new Vector3(10, 5, 10);	// How much area does one hole take
+	public int numberOfHoles = 1;	// How many holes are supposed to be generated
+	public Vector3 maxAreaPerHole = new Vector3(2000, 1000, 1000);	// How much area does one hole take
 	public int basePointAmount = 3; // How many line segments is the generator supposed to start of with
-	public float horizontalOffset = 5f; // Horizontal offset between each area
+	public float horizontalOffset = 100f; // Horizontal offset between each area
 
 	public int segmentScale = 50;
 
@@ -79,7 +79,7 @@ public class CourseGenerator : MonoBehaviour {
 		new Vector2(-1, 1), // north-east
 	};
 
-	public List<float> possibleVerticalDirections = new List<float>();/*
+	public List<float> possibleVerticalDirections = new List<float>()
 	{
 		-1f,
 		-.75f,
@@ -90,7 +90,7 @@ public class CourseGenerator : MonoBehaviour {
 		.125f,
 		.25f,
 		.33f
-	};*/
+	};
 
 
 	List<Direction> directionPool;
@@ -149,7 +149,8 @@ public class CourseGenerator : MonoBehaviour {
 		for (int i = 0; i < holeList.Count; i++)
 		{
 			GameObject hole = holeList [i];
-			MeshCollider mc = hole.AddComponent<MeshCollider>();
+			//MeshCollider mc = 
+			hole.AddComponent<MeshCollider>();
 		}
 	}
 
@@ -252,7 +253,7 @@ public class CourseGenerator : MonoBehaviour {
 				Vector3 topRight = dbl2.GetPosition(j);
 				Vector3 bottomLeft = dbl1.GetPosition(j+1);
 				Vector3 bottomRight = dbl2.GetPosition(j+1);
-				Vector3 up = -Vector3.up;
+				Vector3 up = Vector3.up;
 
 				vertexIndex = j * 2;
 				triIndex = j * 6;
@@ -289,6 +290,8 @@ public class CourseGenerator : MonoBehaviour {
 			newMesh.triangles = tri;
 			newMesh.normals = normals;
 			newMesh.uv = uv;
+
+			newMesh.RecalculateNormals();
 
 			mf.mesh = newMesh;
 
@@ -354,6 +357,7 @@ public class CourseGenerator : MonoBehaviour {
 
 			for (int j = 0; j < points; j++)
 			{
+				Debug.Log(j);
 				// Get random start location in hole area
 				if (j == 0)
 				{
