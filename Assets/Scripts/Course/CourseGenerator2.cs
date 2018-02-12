@@ -111,30 +111,46 @@ public class CourseGenerator2 : MonoBehaviour {
 		vertices [i] = inner + normals [i] * roundness;
 	}
 
-	private void CreateTriangles ()
-	{
-		int quads = 2 * (xSize * ySize + xSize * zSize + ySize * zSize);
-		int[] triangles = new int [quads * 6];
+    private void CreateTriangles()
+    {
+        int[] trianglesZ = new int[(xSize * ySize) * 12];
+        int[] trianglesX = new int[(zSize * ySize) * 12];
+        int[] trianglesY = new int[(xSize * zSize) * 12];
 
-		int ring = 2 * (xSize + zSize);
-		int t = 0, v = 0;
+        int ring = 2 * (xSize + zSize);
+        int tZ = 0, tX = 0, tY = 0, v = 0;
 
-		for (int y = 0; y < ySize; y++, v++)
-		{
-			for (int q = 0; q < ring - 1; q++, v++)
-			{
-				t = SetQuad(triangles, t, v, v + 1, v + ring, v + ring + 1);
-			}
-			t = SetQuad(triangles, t, v, v - ring + 1, v + ring, v + 1);
-		}
+        for (int y = 0; y < ySize; y++, v++)
+        {
+            for (int q = 0; q < xSize; q++, v++)
+            {
+                tZ = SetQuad(trianglesZ, tZ, v, v + 1, v + ring, v + ring + 1);
+            }
+            for (int q = 0; q < zSize; q++, v++)
+            {
+                tX = SetQuad(trianglesX, tX, v, v + 1, v + ring, v + ring + 1);
+            }
+            for (int q = 0; q < xSize; q++, v++)
+            {
+                tZ = SetQuad(trianglesZ, tZ, v, v + 1, v + ring, v + ring + 1);
+            }
+            for (int q = 0; q < zSize - 1; q++, v++)
+            {
+                tX = SetQuad(trianglesX, tX, v, v + 1, v + ring, v + ring + 1);
+            }
+            tX = SetQuad(trianglesX, tX, v, v - ring + 1, v + ring, v + 1);
+        }
 
-		t = CreateTopFace(triangles, t, ring);
-		t = CreateBottomFace(triangles, t, ring);
+        tY = CreateTopFace(trianglesY, tY, ring);
+        tY = CreateBottomFace(trianglesY, tY, ring);
 
-		mesh.triangles = triangles;
-	}
+        mesh.subMeshCount = 3;
+        mesh.SetTriangles(trianglesZ, 0);
+        mesh.SetTriangles(trianglesX, 1);
+        mesh.SetTriangles(trianglesY, 2);
+    }
 
-	private int CreateBottomFace (int [ ] triangles, int t, int ring)
+    private int CreateBottomFace (int [ ] triangles, int t, int ring)
 	{
 		int v = 1;
 		int vMid = vertices.Length - (xSize - 1) * (zSize - 1);

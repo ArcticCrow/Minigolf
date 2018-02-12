@@ -418,7 +418,9 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: dcdcf5d15f035624f93d402b25448bf4, type: 2}
+  - {fileID: 2100000, guid: ec6130ad9dde040409cffccefad2c004, type: 2}
+  - {fileID: 2100000, guid: b42cd3d4ad55eac4ea52b5fdc3cc8560, type: 2}
+  - {fileID: 2100000, guid: 7c80512aeda67b24ea9892627d085fe0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -482,9 +484,9 @@ MonoBehaviour:
   minSegmentWidth: 3
   maxSegmentWidth: 5
   difficultyIncreasePower: 1.1
-  useRandomSeed: 0
+  useRandomSeed: 1
   seed: 
-  areLinesVisible: 0
+  areLinesVisible: 1
   groundMaterial: {fileID: 2100000, guid: a170dc57a289e5e4faee496438a08082, type: 2}
   lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   possibleHorizontalDirections:
