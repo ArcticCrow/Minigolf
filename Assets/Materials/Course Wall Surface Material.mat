@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: Course Wall Surface Material
   m_Shader: {fileID: 4800000, guid: 96afac92685b9cc49b091c4dab072085, type: 3}
-  m_ShaderKeywords: _FACES_X
+  m_ShaderKeywords: _FACES_Z
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -59,7 +59,7 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Faces: 0
+    - _Faces: 2
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
