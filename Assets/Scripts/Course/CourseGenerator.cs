@@ -19,7 +19,7 @@ public class CourseGenerator : MonoBehaviour {
 	// Amount of holes to be generated
 	public int holeCount = 1;
 
-	public int groundWidth = 10;
+	public int courseWidth = 10;
 	public int groundHeight = 1;
 	public int wallThickness = 2;
 
@@ -30,16 +30,26 @@ public class CourseGenerator : MonoBehaviour {
 		GenerateCourse();
 	}
 
-	public static LineRenderer GenerateHoleLayout (int holeNumber, Transform parent)
+    public void GenerateCourse()
+    {
+        InitializeLayoutDictionairy();
+        GenerateMeshes();
+    }
+
+    private void GenerateMeshes()
+    {
+        for (int i = 0; i < holesDict.Count; i++)
+        {
+            Debug.Log("Has game object? " + holesDict[i]);
+            holesDict[i].gameObject.AddComponent<HoleMeshGenerator>().Initialize(groundHeight, courseWidth);
+        }
+    }
+
+    public static LineRenderer GenerateHoleLayout (int holeNumber, Transform parent)
 	{
 		GameObject newHole = new GameObject("Hole " + (holeNumber + 1));
 		newHole.transform.SetParent(parent);
 		return newHole.AddComponent<LineRenderer>();
-	}
-
-	public void GenerateCourse ()
-	{
-		InitializeLayoutDictionairy();
 	}
 
 	private void InitializeLayoutDictionairy ()
@@ -61,7 +71,7 @@ public class CourseGenerator : MonoBehaviour {
 			if (lr == null)
 			{
 				Debug.LogWarning("Hole layout for number " + (i + 1) + " is missing and will be generated!");
-				GenerateHoleLayout(i, transform);
+                lr = GenerateHoleLayout(i, transform);
 			}
 
 			holesDict.Add(i, lr);

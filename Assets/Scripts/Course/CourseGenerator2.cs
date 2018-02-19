@@ -284,7 +284,7 @@ public class CourseGenerator2 : MonoBehaviour {
 		return i + 6;
 	}
 
-	/*private void OnDrawGizmos ()
+	private void OnDrawGizmos ()
 	{
 		if (vertices == null)
 			return;
@@ -295,5 +295,5 @@ public class CourseGenerator2 : MonoBehaviour {
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawRay(vertices [i], normals [i]);
 		}
-	}*/
+	}
 }
