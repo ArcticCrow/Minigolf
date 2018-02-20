@@ -609,7 +609,7 @@ MonoBehaviour:
   holeLayouts:
   - holeNumber: 0
     lineRenderer: {fileID: 479424230}
-  holeCount: 2
+  holeCount: 1
   courseWidth: 10
   groundHeight: 1
   wallThickness: 2
