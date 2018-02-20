@@ -46,7 +46,7 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	private void CreateVertices ()
 	{
-		xSize = 1;
+		xSize = 3;
 		ySize = 1;
 		zSize = 1;
 
@@ -68,34 +68,12 @@ public class HoleMeshGenerator : MonoBehaviour {
 			Debug.Log(i + ". Direction: " + dirs [i]);
 		}
 
-
-		/* Calculating corner vertices
-         * A cube has 8 corners (vertices)
-         * + 4 corners for every extra section (corners, obstacles)
-         * = 8 [base] + 4 * points [4 for each section]
-         * */
-		int cornerVertices = 8 + 4 * layout.positionCount;
-
-		/* Calculating edge verticies
-         * A cube has 4 time 3 edges each requireing x/y/z vertices depending on their local direction
-         * - 3 for each already added corner vertice
-         * + 1 x edge
-         * + 4 z edges
-         * + 2 y edges
-         * = 4 * (xSize + ySize + zSize - 3) [base cube] + points * (2 * (2 * zSize + ySize - 3)  + xSize - 1)
-         * */
-		int edgeVertices = 4 * (xSize + ySize + zSize - 3) + layout.positionCount * (2 * (2 * zSize + ySize - 3) + xSize - 1);
-
-		/* Calculating face vertices
-		 * A cube has 2 times x - 1 * y - 1 for the start and end faces
-		 * + z - 1 * y - 1 face * position count + 1 for all the side faces
-		 * + x - 1 * z - 1 face * position count + 1 for all the top surfaces
-		 * = 2 * (xSize - 1) * (ySize - 1) + (positions + 1) * ((ySize - 1) * (zSize - 1) + (xSize - 1) * (zSize - 1))
-		 * */
-		int faceVertices = 2 * (xSize - 1) * (ySize - 1) +
-			(layout.positionCount + 1) * (
-			(xSize - 1) * (zSize - 1) +
-			(zSize - 1) * (ySize - 1));
+		int cornerVertices = 4 * layout.positionCount;
+		int edgeVertices = layout.positionCount * ((ySize - 1) * 2 + xSize - 1) + 
+			4 * (layout.positionCount - 1) * (zSize - 1) +
+			(xSize - 1) * 2;
+		int faceVertices = (layout.positionCount - 1) * (2 * (ySize - 1) * (zSize - 1) + (xSize - 1) * (zSize - 1)) +
+			2 * (xSize - 1) * (ySize - 1);
 		vertices = new Vector3 [cornerVertices + edgeVertices + faceVertices];
 		normals = new Vector3 [vertices.Length];
 		Debug.Log("corner verts: " + cornerVertices + "; edge verts: " + edgeVertices + "; face verts: " + faceVertices + "; total verts: " + vertices.Length);
@@ -104,47 +82,13 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 		for (int y = 0; y <= ySize; y++)
 		{
-			for (int i = 0; i < layout.positionCount; i++)
+			Vector3 rightShift = new Vector3(- (float) width * scale / 2f, 0, 0);
+			Vector3 offset = layout.GetPosition(0) + rightShift;
+			for(int x = 0; x <= xSize; x++)
 			{
-				Vector3 offset = layout.GetPosition(i) + new Vector3(-width / 2f * xSize, 0, -length / 2f * ySize) * scale;
-				if (i == layout.positionCount - 1)
-				{
-					offset.z -= length * zSize;
-				}
-
-				if (i == 0)//|| y == ySize)
-				{
-					for (int x = 0; x <= xSize; x++)
-					{
-						SetVertex(v++, x * width, y, 0, offset, dirs [i]);
-					}
-					offset.z += length * zSize;
-				}
-				for (int z = 1; z <= zSize; z++)
-				{
-					SetVertex(v++, xSize * width, y, z, offset, dirs [i]);
-				}
-
-				if (i == layout.positionCount - 1)// || (i == 0 && y == ySize))
-				{
-					offset.z += length * zSize;
-					for (int x = xSize; x >= 0; x--)
-					{
-						SetVertex(v++, x * width, y, zSize * length, offset, dirs [i]);
-					}
-				}
+				SetVertex(v++, x, y, 0, offset, dirs[0]);
 			}
-		}
-		for (int y = 0; y <= ySize; y++)
-		{
-			for (int i = layout.positionCount - 1; i >= 0; i--)
-			{
-				Vector3 offset = layout.GetPosition(i) + new Vector3(-width / 2f * xSize, 0, -length / 2f * ySize) * scale;
-				for (int z = zSize; z >= 0; z--)
-				{
-					SetVertex(v++, 0, y, z, offset, dirs[i]);
-				}
-			}
+
 		}
 
 		mesh.vertices = vertices;
@@ -153,8 +97,8 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	private void SetVertex (int i, int x, int y, int z, Vector3 offset, Vector3 dir)
 	{
-		Vector3 inner = vertices [i] = new Vector3(x, y, z) * scale + offset;
-
+		Vector3 inner = vertices [i] = new Vector3(((float) width / (float)(xSize + 1)) * x, y, z * length) * scale + offset;
+		Debug.Log(((float) width / (float) (xSize + 1)) + "*" + x + "=" + (((float) width / (float) (xSize + 1)) * x));
 		normals [i] = (vertices [i] - inner).normalized;
 		vertices [i] = inner;
 

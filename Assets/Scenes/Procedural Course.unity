@@ -289,8 +289,10 @@ LineRenderer:
   m_SortingOrder: 0
   m_Positions:
   - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 10}
   - {x: 0, y: 1, z: 30}
-  - {x: 15, y: 3, z: 40}
+  - {x: 10, y: 3, z: 40}
+  - {x: 10, y: 3, z: 50}
   m_Parameters:
     serializedVersion: 2
     widthMultiplier: 1
@@ -309,7 +311,7 @@ LineRenderer:
     colorGradient:
       serializedVersion: 2
       key0: {r: 1, g: 1, b: 1, a: 1}
-      key1: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 0, g: 0, b: 0, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -610,8 +612,9 @@ MonoBehaviour:
   - holeNumber: 0
     lineRenderer: {fileID: 479424230}
   holeCount: 1
-  courseWidth: 10
-  groundHeight: 1
+  courseWidth: 3
+  segmentLength: 3
+  groundHeight: 0
   wallThickness: 2
 --- !u!1 &2001949334
 GameObject:
