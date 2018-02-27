@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HoleMeshGenerator : MonoBehaviour {
 
-	int xSize = 1, ySize = 1, zSize = 1;
+	int xSize = 3, ySize = 3, zSize = 3;
 
 	private int groundHeight;
     private int width;
@@ -14,10 +14,11 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	Vector3[] vertices;
 	Vector3[] normals;
+	Vector4[] tangents;
 
 	private Mesh mesh;
 
-    public void Initialize(int groundLevel, int trackWidth)
+    public void Initialize(int groundLevel, int trackWidth, Material[] materials)
     {
         groundHeight = groundLevel;
 		width = trackWidth;
@@ -25,9 +26,13 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 		GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 
+		GetComponent<MeshRenderer>().materials = materials;
+
 		CreateVertices();
 		CreateTriangles();
         CreateColliders();
+
+		layout.enabled = false;
     }
 
     private void CreateColliders()
@@ -37,7 +42,6 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	private void CreateVertices ()
 	{
-		WaitForSeconds wait = new WaitForSeconds(.05f);
 
 		int cornerVertices = 4 * layout.positionCount;
 		int edgeVertices = layout.positionCount * ((ySize - 1) * 2 + xSize - 1) +
@@ -47,6 +51,7 @@ public class HoleMeshGenerator : MonoBehaviour {
 			2 * (xSize - 1) * (ySize - 1);
 		vertices = new Vector3 [cornerVertices + edgeVertices + faceVertices];
 		normals = new Vector3 [vertices.Length];
+		tangents = new Vector4 [vertices.Length];
 		//Debug.Log("corner verts: " + cornerVertices + "; edge verts: " + edgeVertices + "; face verts: " + faceVertices + "; total verts: " + vertices.Length);
 
 
@@ -105,6 +110,7 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 		mesh.vertices = vertices;
 		mesh.normals = normals;
+		mesh.tangents = tangents;
 	}
 
 	private void SetVertex (int i, int x, int y, int z, int pos, int nextPos)
@@ -144,10 +150,14 @@ public class HoleMeshGenerator : MonoBehaviour {
 		}
 		vertices [i] = RotatePointAroundPivot(vertices [i], pivot, rotation);
 
-		normals [i] = new Vector3();
+		normals [i] = (vertices [i] - Vector3.Scale(Vector3.Lerp(layout.GetPosition(pos), layout.GetPosition(nextPos), (float) z / (float) zSize), 
+			new Vector3(1, 0, 1))).normalized;
+		//normals [i] = Vector3.up;
+
+		Vector3 right = (layout.GetPosition(nextPos) - layout.GetPosition(pos)).normalized;
+		tangents [i] = new Vector4(right.x, right.y, right.z, -1f);
 
 		//Debug.Log((i + 1) + ". vertex set: " + vertices [i] + "; pivot: " + pivot + " with rotation " + rotation);// + "; normal: " + normals [i]);
-		//cubeUV [i] = new Color32((byte) x, (byte) y, (byte) z, 0);
 	}
 
 	private static Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
@@ -160,15 +170,12 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	private void CreateTriangles ()
 	{
-		WaitForSeconds wait = new WaitForSeconds(.5f);
-
-		int [ ] trianglesXZ = new int [(xSize * ySize) * 12 + (zSize * ySize * layout.positionCount) * 12];
-		int [ ] trianglesY = new int [(xSize * zSize * layout.positionCount) * 6];
+		int [ ] trianglesXZ = new int [(xSize * ySize) * 12 + (zSize * ySize * (layout.positionCount - 1)) * 12];
+		int [ ] trianglesY = new int [(xSize * zSize) * 6 * (layout.positionCount - 1)];
 
 		int ring = 2 * (xSize + zSize * (layout.positionCount - 1));
 
 		int tXZ = 0, tY = 0, v = 0;
-
 
 		for (int y = 0; y < ySize; y++, v++)
 		{
@@ -180,6 +187,7 @@ public class HoleMeshGenerator : MonoBehaviour {
 			tXZ = SetQuad(trianglesXZ, tXZ, v, v - ring + 1, v + ring, v + 1);
 		}
 
+		tY = CreateTopFace(trianglesY, tY, ring);
 
 		mesh.subMeshCount = 2;
 		mesh.SetTriangles(trianglesXZ, 0);
@@ -198,33 +206,46 @@ public class HoleMeshGenerator : MonoBehaviour {
 		int vMin = ring * (ySize + 1) - 1;
 		int vMid = vMin + 1;
 		int vMax = v + 2;
-
-		for (int z = 1; z < zSize - 1; z++, vMin--, vMid++, vMax++)
+		
+		for (int z = 1; z < zSize * (layout.positionCount - 1) - 1; z++, vMin--, vMid++, vMax++)
 		{
-			// Set the first top face quad in a row
-			t = SetQuad(triangles, t, vMin, vMid, vMin - 1, vMid + xSize - 1);
-			// Set the center top face quads in a row
-			for (int x = 1; x < xSize - 1; x++, vMid++)
+			if (xSize > 1)
 			{
-				t = SetQuad(triangles, t, vMid, vMid + 1, vMid + xSize - 1, vMid + xSize);
+				// Set the first top face quad in a row
+				t = SetQuad(triangles, t, vMin, vMid, vMin - 1, vMid + xSize - 1);
+				// Set the center top face quads in a row
+				for (int x = 1; x < xSize - 1; x++, vMid++)
+				{
+					t = SetQuad(triangles, t, vMid, vMid + 1, vMid + xSize - 1, vMid + xSize);
+				}
+				// Set the last top face quad in a row
+				t = SetQuad(triangles, t, vMid, vMax, vMid + xSize - 1, vMax + 1);
+			} else
+			{
+				t = SetQuad(triangles, t, vMin, vMax, vMin - 1, vMax + 1);
 			}
-			// Set the last top face quad in a row
-			t = SetQuad(triangles, t, vMid, vMax, vMid + xSize - 1, vMax + 1);
 		}
 
+		// Last quads
 		int vTop = vMin - 2;
-		t = SetQuad(triangles, t, vMin, vMid, vTop + 1, vTop);
-		for (int x = 1; x < xSize - 1; x++, vTop--, vMid++)
+		if (xSize > 1)
 		{
-			t = SetQuad(triangles, t, vMid, vMid + 1, vTop, vTop - 1);
+			t = SetQuad(triangles, t, vMin, vMid, vTop + 1, vTop);
+			for (int x = 1; x < xSize - 1; x++, vTop--, vMid++)
+			{
+				t = SetQuad(triangles, t, vMid, vMid + 1, vTop, vTop - 1);
+			}
+			t = SetQuad(triangles, t, vMid, vTop - 2, vTop, vTop - 1);
+		} else
+		{
+			t = SetQuad(triangles, t, vMin, vTop - 1, vMin - 1, vTop);
 		}
-		t = SetQuad(triangles, t, vMid, vTop - 2, vTop, vTop - 1);
-
 		return t;
 	}
 
 	private static int SetQuad (int [ ] triangles, int i, int v00, int v10, int v01, int v11)
 	{
+		//Debug.Log("Setting Quad " + (i / 6 + 1) + " of " + (triangles.Length / 6) + "[v00,10,01,11|" + v00 + "," + v10 + "," + v01 + "," + v11 + "]");
 		triangles [i] = v00;
 		triangles [i + 1] = triangles [i + 4] = v01;
 		triangles [i + 2] = triangles [i + 3] = v10;
@@ -241,8 +262,8 @@ public class HoleMeshGenerator : MonoBehaviour {
 		{
 			if (vertices [i] == Vector3.zero)
 				continue;
-			Gizmos.color = Color.black;
-			Gizmos.DrawCube(vertices [i], Vector3.one);
+			//Gizmos.color = Color.black;
+			//Gizmos.DrawCube(vertices [i], new Vector3(.25f, .25f, .25f));
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawRay(vertices [i], normals [i]);
 		}

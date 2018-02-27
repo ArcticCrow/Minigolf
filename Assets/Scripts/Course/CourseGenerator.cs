@@ -16,6 +16,9 @@ public class CourseGenerator : MonoBehaviour {
 	// Takes a list of Line Renderers
 	public LineRendererHole[] holeLayouts;
 
+	public Material groundMaterial;
+	public Material wallMaterial;
+
 	// Amount of holes to be generated
 	public int holeCount = 1;
 
@@ -38,10 +41,15 @@ public class CourseGenerator : MonoBehaviour {
 
     private void GenerateMeshes()
     {
+		Material [ ] materials = new Material [ ]
+		{
+			wallMaterial,
+			groundMaterial
+		};
         for (int i = 0; i < holesDict.Count; i++)
         {
             Debug.Log("Has game object? " + holesDict[i]);
-            holesDict[i].gameObject.AddComponent<HoleMeshGenerator>().Initialize(groundHeight, courseWidth);
+            holesDict[i].gameObject.AddComponent<HoleMeshGenerator>().Initialize(groundHeight, courseWidth, materials);
         }
     }
 
