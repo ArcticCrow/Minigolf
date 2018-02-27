@@ -288,11 +288,11 @@ LineRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Positions:
-  - {x: 0, y: 2, z: 0}
+  - {x: -10, y: 2, z: 0}
   - {x: 0, y: 2, z: 10}
   - {x: 0, y: 1, z: 30}
   - {x: 10, y: 5, z: 40}
-  - {x: 10, y: 5, z: 50}
+  - {x: 20, y: 5, z: 50}
   m_Parameters:
     serializedVersion: 2
     widthMultiplier: 1
@@ -742,7 +742,7 @@ MonoBehaviour:
     lineRenderer: {fileID: 816011606}
   - holeNumber: 2
     lineRenderer: {fileID: 1959352581}
-  holeCount: 3
+  holeCount: 1
   courseWidth: 10
   groundHeight: 0
   wallThickness: 1
