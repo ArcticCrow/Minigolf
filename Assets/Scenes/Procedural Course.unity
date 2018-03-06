@@ -818,7 +818,6 @@ LineRenderer:
   - {x: -50, y: 2, z: 30}
   - {x: -100, y: 2, z: 40}
   - {x: -100, y: 2, z: 50}
-  - {x: -100, y: 2, z: 50}
   m_Parameters:
     serializedVersion: 2
     widthMultiplier: 1

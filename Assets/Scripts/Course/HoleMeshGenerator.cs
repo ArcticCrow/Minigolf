@@ -25,8 +25,9 @@ public class HoleMeshGenerator : MonoBehaviour {
         layout = gameObject.GetComponent<LineRenderer>();
 
 		GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+        mesh.name = gameObject.name + " (Mesh)";
 
-		GetComponent<MeshRenderer>().materials = materials;
+        GetComponent<MeshRenderer>().materials = materials;
 
 		CreateVertices();
 		CreateTriangles();
@@ -145,17 +146,10 @@ public class HoleMeshGenerator : MonoBehaviour {
 		else
 		{
 			pivot = Vector3.Lerp(layout.GetPosition(pos), layout.GetPosition(nextPos), (float) z / (float) zSize);
-			rotation = Vector3.Scale(layout.GetPosition(nextPos) - layout.GetPosition(pos), new Vector3(1, 0, 1));
+			rotation = Vector3.Scale(layout.GetPosition(nextPos) - layout.GetPosition(pos), new Vector3(1f, 0, 1f));
 			rotation = Quaternion.LookRotation(rotation).eulerAngles;
 		}
 		vertices [i] = RotatePointAroundPivot(vertices [i], pivot, rotation);
-
-		normals [i] = (vertices [i] - Vector3.Scale(Vector3.Lerp(layout.GetPosition(pos), layout.GetPosition(nextPos), (float) z / (float) zSize), 
-			new Vector3(1, 0, 1))).normalized;
-		//normals [i] = Vector3.up;
-
-		Vector3 right = (layout.GetPosition(nextPos) - layout.GetPosition(pos)).normalized;
-		tangents [i] = new Vector4(right.x, right.y, right.z, -1f);
 
 		//Debug.Log((i + 1) + ". vertex set: " + vertices [i] + "; pivot: " + pivot + " with rotation " + rotation);// + "; normal: " + normals [i]);
 	}
@@ -167,6 +161,16 @@ public class HoleMeshGenerator : MonoBehaviour {
 		point = dir + pivot;
 		return point;
 	}
+
+    private void CalculateNormalAndTangent(int a, int b, int c, int d)
+    {
+        Vector3 normal = Vector3.Cross(vertices[a] - vertices[b], vertices[c] - vertices[b]).normalized;
+        Vector4 right = (vertices[b] - vertices[a]).normalized;
+        right.w = -1f;
+        normals[a] = normals[b] = normals[c] = normals[d] = normal;
+        tangents[a] = tangents[b] = tangents[c] = tangents[d] = right;
+
+    }
 
 	private void CreateTriangles ()
 	{
@@ -182,12 +186,16 @@ public class HoleMeshGenerator : MonoBehaviour {
 			for (int q = 0; q < ring - 1; q++, v++)
 			{
 				tXZ = SetQuad(trianglesXZ, tXZ, v, v + 1, v + ring, v + ring + 1);
-				mesh.SetTriangles(trianglesXZ, 0);
+                CalculateNormalAndTangent(v, v + 1, v + ring, v + ring + 1);
 			}
 			tXZ = SetQuad(trianglesXZ, tXZ, v, v - ring + 1, v + ring, v + 1);
-		}
+            CalculateNormalAndTangent(v, v - ring + 1, v + ring, v + 1);
+        }
 
-		tY = CreateTopFace(trianglesY, tY, ring);
+        tY = CreateTopFace(trianglesY, tY, ring);
+
+        mesh.normals = normals;
+        mesh.tangents = tangents;
 
 		mesh.subMeshCount = 2;
 		mesh.SetTriangles(trianglesXZ, 0);
@@ -200,10 +208,14 @@ public class HoleMeshGenerator : MonoBehaviour {
 		for (int x = 0; x < xSize - 1; x++, v++)
 		{
 			t = SetQuad(triangles, t, v, v + 1, v + ring - 1, v + ring);
-		}
-		t = SetQuad(triangles, t, v, v + 1, v + ring - 1, v + 2);
+            CalculateNormalAndTangent(v, v + 1, v + ring - 1, v + ring);
 
-		int vMin = ring * (ySize + 1) - 1;
+        }
+        t = SetQuad(triangles, t, v, v + 1, v + ring - 1, v + 2);
+        CalculateNormalAndTangent(v, v + 1, v + ring - 1, v + 2);
+
+
+        int vMin = ring * (ySize + 1) - 1;
 		int vMid = vMin + 1;
 		int vMax = v + 2;
 		
@@ -213,34 +225,52 @@ public class HoleMeshGenerator : MonoBehaviour {
 			{
 				// Set the first top face quad in a row
 				t = SetQuad(triangles, t, vMin, vMid, vMin - 1, vMid + xSize - 1);
-				// Set the center top face quads in a row
-				for (int x = 1; x < xSize - 1; x++, vMid++)
+                CalculateNormalAndTangent(vMin, vMid, vMin - 1, vMid + xSize - 1);
+
+                // Set the center top face quads in a row
+                for (int x = 1; x < xSize - 1; x++, vMid++)
 				{
 					t = SetQuad(triangles, t, vMid, vMid + 1, vMid + xSize - 1, vMid + xSize);
-				}
-				// Set the last top face quad in a row
-				t = SetQuad(triangles, t, vMid, vMax, vMid + xSize - 1, vMax + 1);
-			} else
+                    CalculateNormalAndTangent(vMid, vMid + 1, vMid + xSize - 1, vMid + xSize);
+
+                }
+                // Set the last top face quad in a row
+                t = SetQuad(triangles, t, vMid, vMax, vMid + xSize - 1, vMax + 1);
+                CalculateNormalAndTangent(vMid, vMax, vMid + xSize - 1, vMax + 1);
+
+            }
+            else
 			{
 				t = SetQuad(triangles, t, vMin, vMax, vMin - 1, vMax + 1);
-			}
-		}
+                CalculateNormalAndTangent(vMin, vMax, vMin - 1, vMax + 1);
+
+            }
+        }
 
 		// Last quads
 		int vTop = vMin - 2;
 		if (xSize > 1)
 		{
 			t = SetQuad(triangles, t, vMin, vMid, vTop + 1, vTop);
-			for (int x = 1; x < xSize - 1; x++, vTop--, vMid++)
+            CalculateNormalAndTangent(vMin, vMid, vTop + 1, vTop);
+
+            for (int x = 1; x < xSize - 1; x++, vTop--, vMid++)
 			{
 				t = SetQuad(triangles, t, vMid, vMid + 1, vTop, vTop - 1);
-			}
-			t = SetQuad(triangles, t, vMid, vTop - 2, vTop, vTop - 1);
-		} else
+                CalculateNormalAndTangent(vMid, vMid + 1, vTop, vTop - 1);
+
+            }
+            t = SetQuad(triangles, t, vMid, vTop - 2, vTop, vTop - 1);
+            CalculateNormalAndTangent(vMid, vTop - 2, vTop, vTop - 1);
+
+        }
+        else
 		{
 			t = SetQuad(triangles, t, vMin, vTop - 1, vMin - 1, vTop);
-		}
-		return t;
+            CalculateNormalAndTangent(vMin, vTop - 1, vMin - 1, vTop);
+
+        }
+        return t;
 	}
 
 	private static int SetQuad (int [ ] triangles, int i, int v00, int v10, int v01, int v11)
@@ -262,10 +292,12 @@ public class HoleMeshGenerator : MonoBehaviour {
 		{
 			if (vertices [i] == Vector3.zero)
 				continue;
-			//Gizmos.color = Color.black;
-			//Gizmos.DrawCube(vertices [i], new Vector3(.25f, .25f, .25f));
+			Gizmos.color = Color.black;
+			Gizmos.DrawCube(vertices [i], new Vector3(.25f, .25f, .25f));
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawRay(vertices [i], normals [i]);
-		}
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(vertices[i], tangents[i]);
+        }
 	}
 }
