@@ -275,7 +275,6 @@ public class HoleMeshGenerator : MonoBehaviour {
 
 	private static int SetQuad (int [ ] triangles, int i, int v00, int v10, int v01, int v11)
 	{
-		//Debug.Log("Setting Quad " + (i / 6 + 1) + " of " + (triangles.Length / 6) + "[v00,10,01,11|" + v00 + "," + v10 + "," + v01 + "," + v11 + "]");
 		triangles [i] = v00;
 		triangles [i + 1] = triangles [i + 4] = v01;
 		triangles [i + 2] = triangles [i + 3] = v10;
