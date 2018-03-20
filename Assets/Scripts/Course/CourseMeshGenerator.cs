@@ -10,9 +10,7 @@ public class CourseMeshGenerator : MonoBehaviour {
 	enum PositionInTrack
 	{
 		OUTER_WALL = 0,
-		TOP_WALL = 1,
-		INNER_WALL = 2,
-		TRACK = 3,
+		TRACK = 1,
 	}
 
 	private float m_groundLevel, m_trackWidth, m_wallThickness, m_wallHeight;
@@ -39,83 +37,16 @@ public class CourseMeshGenerator : MonoBehaviour {
 
 		GetComponent<MeshRenderer>().materials = materials;
 
-		//StartCoroutine(CreateVerticesInterval());
-
 		CreateVertices();
-
-		//StartCoroutine(CreateTrianglesInterval());
-
 		CreateTriangles();
-
 		CreateColliders();
 
-		GetComponent<LineRenderer>().enabled = true;
-	}
-
-
-	private IEnumerator CreateVerticesInterval ()
-	{
-		WaitForEndOfFrame wait = new WaitForEndOfFrame();
-
-		int verticesCount = 16 * (m_layout.Length - 1) + 8;
-
-		m_vertices = new Vector3 [verticesCount];
-		m_normals = new Vector3 [verticesCount];
-		m_tangents = new Vector4 [verticesCount];
-
-		int v = 0;
-		//int ring = m_layout.Length * 4;
-
-		// Outer vertices
-		for (int y = 0; y < 2; y++)
-		{
-			// front
-			for (int x = 0; x < 2; x++)
-			{
-				SetVertex(v++, x, y, 0, 0);
-				Debug.Log(v + ". Front");
-				m_mesh.vertices = m_vertices;
-				yield return wait;
-			}
-			// right side
-			for (int pos = 0; pos < m_layout.Length - 1; pos++)
-			{
-				for (int z = 0; z < 2; z++)
-				{
-					SetVertex(v++, 1, y, z, pos);
-					Debug.Log(v + ". Right");
-					m_mesh.vertices = m_vertices;
-					yield return wait;
-				}
-			}
-			// back
-			for (int x = 1; x >= 0; x--)
-			{
-				SetVertex(v++, x, y, 1, m_layout.Length - 2);
-				Debug.Log(v + ". Back");
-				m_mesh.vertices = m_vertices;
-				yield return wait;
-			}
-			//left side
-			for (int pos = m_layout.Length - 1; pos > 0; pos--)
-			{
-				for (int z = 1; z >= 0; z--)
-				{
-					SetVertex(v++, 0, y, z, pos - 1);
-					Debug.Log(v + ". Left");
-					m_mesh.vertices = m_vertices;
-					yield return wait;
-				}
-			}
-		}
-
-
-		m_mesh.vertices = m_vertices;
+		GetComponent<LineRenderer>().enabled = false;
 	}
 
 	private void CreateVertices ()
 	{
-		int verticesCount = 28 * (m_layout.Length - 1) + 24;
+		int verticesCount = 24 * m_layout.Length + 4 * (m_layout.Length - 1);
 
 		m_vertices = new Vector3 [verticesCount];
 		m_normals = new Vector3 [verticesCount];
@@ -125,7 +56,7 @@ public class CourseMeshGenerator : MonoBehaviour {
 		int v = 0;
 		//int ring = m_layout.Length * 4;
 
-		// Outer vertices
+		// Outer wall vertices
 		for (int y = 0; y < 2; y++)
 		{
 			// front
@@ -159,7 +90,88 @@ public class CourseMeshGenerator : MonoBehaviour {
 				}
 			}
 		}
+		
+		// Top of wall vertices
+		for (int i = 0; i < 2; i++)
+		{
+			// front
+			for (int x = 0; x < 2; x++)
+			{
+				m_uv [v] = new Vector2(x, i);
+				SetVertex(v++, x, 1, 0, 0, (PositionInTrack) i);
+			}
+			// right side
+			for (int pos = 0; pos < m_layout.Length - 1; pos++)
+			{
+				for (int z = 0; z < 2; z++)
+				{
+					m_uv [v] = new Vector2(z, i);
+					SetVertex(v++, 1, 1, z, pos, (PositionInTrack) i);
+				}
+			}
+			// back
+			for (int x = 1; x >= 0; x--)
+			{
+				m_uv [v] = new Vector2(x, i);
+				SetVertex(v++, x, 1, 1, m_layout.Length - 2, (PositionInTrack) i);
+			}
+			//left side
+			for (int pos = m_layout.Length - 1; pos > 0; pos--)
+			{
+				for (int z = 1; z >= 0; z--)
+				{
+					m_uv [v] = new Vector2(z, i);
+					SetVertex(v++, 0, 1, z, pos - 1, (PositionInTrack) i);
+				}
+			}
+		}
 
+		// Inner wall vertices
+		for (int y = 1; y >= 0; y--)
+		{
+			// front
+			for (int x = 0; x < 2; x++)
+			{
+				m_uv [v] = new Vector2(x, 1 - y);
+				SetVertex(v++, x, y, 0, 0, PositionInTrack.TRACK);
+			}
+			// right side
+			for (int pos = 0; pos < m_layout.Length - 1; pos++)
+			{
+				for (int z = 0; z < 2; z++)
+				{
+					m_uv [v] = new Vector2(z, 1 - y);
+					SetVertex(v++, 1, y, z, pos, PositionInTrack.TRACK);
+				}
+			}
+			// back
+			for (int x = 1; x >= 0; x--)
+			{
+				m_uv [v] = new Vector2(x, 1 - y);
+				SetVertex(v++, x, y, 1, m_layout.Length - 2, PositionInTrack.TRACK);
+			}
+			//left side
+			for (int pos = m_layout.Length - 1; pos > 0; pos--)
+			{
+				for (int z = 1; z >= 0; z--)
+				{
+					m_uv [v] = new Vector2(z, 1 - y);
+					SetVertex(v++, 0, y, z, pos - 1, PositionInTrack.TRACK);
+				}
+			}
+		}
+		// Track face vertices
+		for (int pos = 0; pos < m_layout.Length - 1; pos ++)
+		{
+			m_uv [v] = new Vector2(0, 0);
+			SetVertex(v++, 0, 0, 0, pos, PositionInTrack.TRACK);
+			m_uv [v] = new Vector2(1, 0);
+			SetVertex(v++, 1, 0, 0, pos, PositionInTrack.TRACK);
+			m_uv [v] = new Vector2(0, 1);
+			SetVertex(v++, 0, 0, 1, pos, PositionInTrack.TRACK);
+			m_uv [v] = new Vector2(1, 1);
+			SetVertex(v++, 1, 0, 1, pos, PositionInTrack.TRACK);
+		}
 
 		m_mesh.vertices = m_vertices;
 		m_mesh.uv = m_uv;
@@ -179,9 +191,13 @@ public class CourseMeshGenerator : MonoBehaviour {
 
 				x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z)
 				- ((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x)),
-
-				z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z)
 			};
+			if ((pos == 0 && z == 0) || (pos == m_layout.Length - 2 && z == 1))
+			{
+				m_vertices [i].z = Mathf.Lerp(m_layout [pos].z - m_trackWidth / 2f, m_layout [pos + 1].z + m_trackWidth / 2f, (float) z);
+				break;
+			}
+			m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
 			break;
 
 		case PositionInTrack.OUTER_WALL: // Position vertices based on offset from wall and ground level
@@ -190,14 +206,12 @@ public class CourseMeshGenerator : MonoBehaviour {
 			{
 				y = Mathf.Lerp(m_groundLevel, Mathf.Lerp(m_layout [pos].y, m_layout [pos + 1].y, (float) z) + m_wallHeight, (float) y),
 
-				x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z) -
-				((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x))
+				x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z) - ((float) m_trackWidth / 2f + m_wallThickness - Mathf.Lerp(0, m_trackWidth + m_wallThickness * 2, (float) x))
 			};
 
-			// TODO MOVE WALL FURTHER OUT
-			if (pos == 0 || pos == m_layout.Length - 2)
+			if ((pos == 0 && z == 0) || (pos == m_layout.Length - 2 && z == 1))
 			{
-				m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
+				m_vertices [i].z = Mathf.Lerp(m_layout [pos].z - m_wallThickness - m_trackWidth / 2f, m_layout [pos + 1].z + m_wallThickness + m_trackWidth / 2f, (float) z);
 				break;
 			}
 			m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
@@ -242,48 +256,47 @@ public class CourseMeshGenerator : MonoBehaviour {
 		return point;
 	}
 
-	private IEnumerator CreateTrianglesInterval ()
-	{
-		WaitForEndOfFrame wait = new WaitForEndOfFrame();
-
-		int [ ] trianglesXZ = new int [12 * m_layout.Length];
-		int [ ] trianglesY = new int [12 * m_layout.Length];
-		int tXZ = 0, v = 0;
-
-		int ring = 4 * m_layout.Length;
-
-		m_mesh.subMeshCount = 2;
-
-		for (int pos = 0; pos < m_layout.Length * 2; pos++, v += 2)
-		{
-			yield return wait;
-			tXZ = SetQuad(trianglesXZ, tXZ, v, v + 1, v + ring, v + ring + 1);
-			CalculateNormalAndTangent(v, v + 1, v + ring, v + ring + 1);
-			Debug.Log(v + ". Vert");
-			m_mesh.SetTriangles(trianglesXZ, 0);
-			
-		}
-
-		m_mesh.normals = m_normals;
-		m_mesh.tangents = m_tangents;
-
-		
-		
-		m_mesh.SetTriangles(trianglesY, 1);
-	}
-
 	private void CreateTriangles ()
 	{
-		int [ ] trianglesXZ = new int [12 * m_layout.Length];
-		int [ ] trianglesY = new int [12 * m_layout.Length];
-		int tXZ = 0, v = 0;
+		int [ ] trianglesXZ = new int [12 * 3 * m_layout.Length];
+		int [ ] trianglesY = new int [6 * (m_layout.Length - 1)];
+		int tXZ = 0, tY = 0, v = 0;
 
 		int ring = 4 * m_layout.Length;
 
+		// Outer wall
 		for (int pos = 0; pos < m_layout.Length * 2; pos++, v += 2)
 		{
 			tXZ = SetQuad(trianglesXZ, tXZ, v, v + 1, v + ring, v + ring + 1);
 			CalculateNormalAndTangent(v, v + 1, v + ring, v + ring + 1);
+		}
+
+		v += ring;
+
+		// Top of wall
+		for (int pos = 0; pos < m_layout.Length * 2; pos++, v += 2)
+		{
+			tXZ = SetQuad(trianglesXZ, tXZ, v, v + 1, v + ring, v + ring + 1);
+			CalculateNormalAndTangent(v, v + 1, v + ring, v + ring + 1);
+		}
+
+		v += ring;
+
+		// Inner wall
+		for (int pos = 0; pos < m_layout.Length * 2; pos++, v += 2)
+		{
+			
+			tXZ = SetQuad(trianglesXZ, tXZ, v, v + 1, v + ring, v + ring + 1);
+			CalculateNormalAndTangent(v, v + 1, v + ring, v + ring + 1);
+		}
+
+		v += ring;
+
+		// Track faces
+		for (int pos = 0; pos < m_layout.Length - 1; pos++, v += 4)
+		{
+			tY = SetQuad(trianglesY, tY, v, v + 1, v + 2, v + 3);
+			CalculateNormalAndTangent(v, v + 1, v + 2, v + 3);
 		}
 
 		m_mesh.normals = m_normals;
@@ -296,7 +309,6 @@ public class CourseMeshGenerator : MonoBehaviour {
 
 	private static int SetQuad (int [ ] triangles, int i, int v00, int v10, int v01, int v11)
 	{
-
 		triangles [i] = v00;
 		triangles [i + 1] = triangles [i + 4] = v01;
 		triangles [i + 2] = triangles [i + 3] = v10;
@@ -317,10 +329,11 @@ public class CourseMeshGenerator : MonoBehaviour {
 
 	private void CreateColliders ()
 	{
-		//throw new NotImplementedException();
+		MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
+		meshCollider.sharedMesh = m_mesh;
 	}
 
-	private void OnDrawGizmos ()
+	/*private void OnDrawGizmos ()
 	{
 		if (m_vertices == null)
 			return;
@@ -328,7 +341,10 @@ public class CourseMeshGenerator : MonoBehaviour {
 		{
 			if (m_vertices [i] == Vector3.zero)
 				continue;
-			Gizmos.color = Color.black;
+			if (i >= 120)
+				Gizmos.color = Color.green;
+			else
+				Gizmos.color = Color.black;
 			Gizmos.DrawCube(m_vertices [i], new Vector3(.25f, .25f, .25f));
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawRay(m_vertices [i], m_normals [i]);
@@ -341,6 +357,6 @@ public class CourseMeshGenerator : MonoBehaviour {
 		Gizmos.DrawCube(m_vertices [1], new Vector3(.5f, .5f, .5f));
 		Gizmos.DrawCube(m_vertices [20], new Vector3(.5f, .5f, .5f));
 		Gizmos.DrawCube(m_vertices [21], new Vector3(.5f, .5f, .5f));
-		*/
-	}
+		* /
+	}*/
 }

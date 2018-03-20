@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 [Serializable]
 public class LineRendererHole
@@ -11,7 +12,7 @@ public class LineRendererHole
 }
 
 
-public class CourseGenerator : MonoBehaviour {
+public class CourseManager : MonoBehaviour {
 
 	// Takes a list of Line Renderers
 	public LineRendererHole[] holeLayouts;
@@ -27,8 +28,13 @@ public class CourseGenerator : MonoBehaviour {
 	public float wallHeight = .5f;
 	public float wallThickness = .5f;
 
-	private Dictionary<int, LineRenderer> holesDict = new Dictionary<int, LineRenderer>();
-	private Dictionary<int, Vector3[]> layoutDict = new Dictionary<int, Vector3[]>();
+	private Dictionary<int, LineRenderer> m_holesDict = new Dictionary<int, LineRenderer>();
+	private Dictionary<int, Vector3[]> m_layoutDict = new Dictionary<int, Vector3[]>();
+
+	private CapsuleCollider m_goalCol;
+	private GameObject startPoint;
+
+	private int currentHole = 0;
 
 	private void Awake ()
 	{
@@ -39,6 +45,8 @@ public class CourseGenerator : MonoBehaviour {
     {
         InitializeLayoutDictionairy();
         GenerateMeshes();
+
+		SetActiveHole(currentHole);
     }
 
     private void GenerateMeshes()
@@ -48,10 +56,10 @@ public class CourseGenerator : MonoBehaviour {
 			wallMaterial,
 			groundMaterial
 		};
-        for (int i = 0; i < holesDict.Count; i++)
+        for (int i = 0; i < m_holesDict.Count; i++)
         {
-            Debug.Log("Has game object? " + holesDict[i]);
-            holesDict[i].gameObject.AddComponent<CourseMeshGenerator>().Initialize(groundHeight, courseWidth, wallThickness, wallHeight, materials, layoutDict[i]);
+            Debug.Log("Has game object? " + m_holesDict[i]);
+            m_holesDict[i].gameObject.AddComponent<CourseMeshGenerator>().Initialize(groundHeight, courseWidth, wallThickness, wallHeight, materials, m_layoutDict[i]);
         }
     }
 
@@ -64,7 +72,7 @@ public class CourseGenerator : MonoBehaviour {
 
 	private void InitializeLayoutDictionairy ()
 	{
-		holesDict = new Dictionary<int, LineRenderer>(holeCount);
+		m_holesDict = new Dictionary<int, LineRenderer>(holeCount);
 		for (int i = 0; i < holeCount; i++)
 		{
 			LineRenderer lr = null;
@@ -84,14 +92,54 @@ public class CourseGenerator : MonoBehaviour {
                 lr = GenerateHoleLayout(i, transform);
 			}
 
-			holesDict.Add(i, lr);
+			m_holesDict.Add(i, lr);
 
 			Vector3 [ ] layout = new Vector3 [lr.positionCount];
 			for (int j = 0; j < lr.positionCount; j++)
 			{
 				layout [j] = lr.GetPosition(j);
 			}
-			layoutDict.Add(i, layout);
+			m_layoutDict.Add(i, layout);
+		}
+	}
+
+	private void SetActiveHole (int holeID)
+	{
+		Vector3 [ ] layout = m_layoutDict [holeID];
+		if (m_goalCol == null)
+		{
+			m_goalCol = gameObject.AddComponent<CapsuleCollider>();
+			m_goalCol.isTrigger = true;
+			m_goalCol.tag = "Finish";
+		}
+		m_goalCol.center = layout[layout.Length - 1];
+		m_goalCol.radius = 1f;
+		m_goalCol.height = 2f;
+
+		if (startPoint == null)
+		{
+			startPoint = new GameObject("Current Spawnpoint");
+			startPoint.transform.SetParent(transform);
+			startPoint.AddComponent<NetworkStartPosition>();
+		}
+
+		startPoint.transform.position = layout [0] + Vector3.up;
+	}
+
+	private void OnTriggerEnter (Collider other)
+	{
+		Debug.Log("Collision!");
+
+		if (other.gameObject.CompareTag("Player"))
+		{
+			Debug.Log("The player touched the goal");
+
+			currentHole++;
+
+			SetActiveHole(currentHole);
+
+			other.transform.position = startPoint.transform.position;
+			other.GetComponent<Rigidbody>().velocity = Vector3.zero;
 		}
 	}
 }

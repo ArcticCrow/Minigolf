@@ -68,7 +68,6 @@ public class HoleMeshGenerator : MonoBehaviour {
 			}
 			for (int pos = 0; pos < layout.positionCount - 1; pos++)
 			{
-				//Debug.Log("Position " + pos);
 				for (int z = 1; z <= zSize; z++)
 				{
 					SetVertex(v++, xSize, y, z, pos, pos + 1);
@@ -82,14 +81,12 @@ public class HoleMeshGenerator : MonoBehaviour {
 			}
 			for (int pos = layout.positionCount - 1; pos > 0; pos--)
 			{
-				//Debug.Log("Position " + pos + " (reverse)");
 				for (int z = zSize - 1; z >= 0; z--)
 				{
 					if (pos > 1 || z != 0)
 					{
 						SetVertex(v++, 0, y, z, pos - 1, pos);
 					}
-
 				}
 			}
 		}

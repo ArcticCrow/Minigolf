@@ -5,6 +5,9 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
-    path: Assets/Scenes/Main.unity
+  - enabled: 0
+    path: Assets/Scenes/Custom Course.unity
     guid: ad6f206c857e6f24baaff388528e7909
+  - enabled: 1
+    path: Assets/Scenes/Procedural Course.unity
+    guid: d88d8d53648d22e4da629c3d325a1681
