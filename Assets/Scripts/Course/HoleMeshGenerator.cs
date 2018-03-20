@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HoleMeshGenerator : MonoBehaviour {
 
-	int xSize = 3, ySize = 3, zSize = 3;
+	int xSize = 1, ySize = 1, zSize = 1;
 
 	private int groundHeight;
     private int width;

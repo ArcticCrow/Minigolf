@@ -22,11 +22,13 @@ public class CourseGenerator : MonoBehaviour {
 	// Amount of holes to be generated
 	public int holeCount = 1;
 
-	public int courseWidth = 2;
-	public int groundHeight = 0;
-	public int wallThickness = 2;
+	public float courseWidth = 2;
+	public float groundHeight = 0;
+	public float wallHeight = .5f;
+	public float wallThickness = .5f;
 
 	private Dictionary<int, LineRenderer> holesDict = new Dictionary<int, LineRenderer>();
+	private Dictionary<int, Vector3[]> layoutDict = new Dictionary<int, Vector3[]>();
 
 	private void Awake ()
 	{
@@ -49,7 +51,7 @@ public class CourseGenerator : MonoBehaviour {
         for (int i = 0; i < holesDict.Count; i++)
         {
             Debug.Log("Has game object? " + holesDict[i]);
-            holesDict[i].gameObject.AddComponent<HoleMeshGenerator>().Initialize(groundHeight, courseWidth, materials);
+            holesDict[i].gameObject.AddComponent<CourseMeshGenerator>().Initialize(groundHeight, courseWidth, wallThickness, wallHeight, materials, layoutDict[i]);
         }
     }
 
@@ -83,6 +85,13 @@ public class CourseGenerator : MonoBehaviour {
 			}
 
 			holesDict.Add(i, lr);
+
+			Vector3 [ ] layout = new Vector3 [lr.positionCount];
+			for (int j = 0; j < lr.positionCount; j++)
+			{
+				layout [j] = lr.GetPosition(j);
+			}
+			layoutDict.Add(i, layout);
 		}
 	}
 }

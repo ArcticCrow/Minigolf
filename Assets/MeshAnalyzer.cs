@@ -27,11 +27,11 @@ public class MeshAnalyzer : MonoBehaviour {
         }
         for (int i = 0; i < m_vertices.Length; i++)
         {
-            Debug.Log(i + ". drawing Gizmos");
+            //Debug.Log(i + ". drawing Gizmos");
             if (m_vertices[i] == Vector3.zero)
                 continue;
             Gizmos.color = Color.black;
-            Gizmos.DrawCube(m_vertices[i], new Vector3(1f, 1f, 1f));
+            Gizmos.DrawCube(m_vertices[i], new Vector3(.01f, .01f, .01f));
             Gizmos.color = Color.yellow;
             Gizmos.DrawRay(m_vertices[i], m_normals[i]);
             Gizmos.color = Color.blue;
