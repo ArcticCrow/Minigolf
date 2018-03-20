@@ -743,7 +743,7 @@ MonoBehaviour:
   - holeNumber: 2
     lineRenderer: {fileID: 1959352581}
   groundMaterial: {fileID: 2100000, guid: 29f73ae28b2022646902efa607959d6c, type: 2}
-  wallMaterial: {fileID: 2100000, guid: 29f73ae28b2022646902efa607959d6c, type: 2}
+  wallMaterial: {fileID: 2100000, guid: e49c257c320f85c44b854b6a5c68946f, type: 2}
   holeCount: 1
   courseWidth: 10
   groundHeight: 0
