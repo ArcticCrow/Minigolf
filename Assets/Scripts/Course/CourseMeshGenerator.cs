@@ -169,33 +169,40 @@ public class CourseMeshGenerator : MonoBehaviour {
 	{
 		switch (posInTrack)
 		{
-		case PositionInTrack.TRACK:
-			m_vertices [i] = new Vector3();
-			m_vertices [i].y = Mathf.Lerp(
+		case PositionInTrack.TRACK: // Position vertices based on Track Height
+			m_vertices [i] = new Vector3
+			{
+				y = Mathf.Lerp(
 					Mathf.Lerp(m_layout [pos].y, m_layout [pos + 1].y, (float) z),
 					Mathf.Lerp(m_layout [pos].y, m_layout [pos + 1].y, (float) z) + m_wallHeight,
-					(float) y);
+					(float) y),
 
-			m_vertices [i].x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z) 
-				- ((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x));
+				x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z)
+				- ((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x)),
 
-			m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
+				z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z)
+			};
 			break;
 
-		case PositionInTrack.OUTER_WALL:
+		case PositionInTrack.OUTER_WALL: // Position vertices based on offset from wall and ground level
 		default:
 			m_vertices [i] = new Vector3
 			{
 				y = Mathf.Lerp(m_groundLevel, Mathf.Lerp(m_layout [pos].y, m_layout [pos + 1].y, (float) z) + m_wallHeight, (float) y),
 
 				x = Mathf.Lerp(m_layout [pos].x, m_layout [pos + 1].x, (float) z) -
-				((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x)),
-
-				z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z)
+				((float) m_trackWidth / 2f - Mathf.Lerp(0, m_trackWidth, (float) x))
 			};
+
+			// TODO MOVE WALL FURTHER OUT
+			if (pos == 0 || pos == m_layout.Length - 2)
+			{
+				m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
+				break;
+			}
+			m_vertices [i].z = Mathf.Lerp(m_layout [pos].z, m_layout [pos + 1].z, (float) z);
 			break;
 		}
-
 		SmoothRotateVertexAroundPos(i, z, pos);
 	}
 
